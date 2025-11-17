@@ -36,18 +36,15 @@ protected:
 
     };
 
-private:
-    AVLNode* root;
-    size_t treeSize;
-
 public:
+
     bool insert(const std::string& key, size_t value);
     bool remove(const std::string& key);
     bool contains(const std::string& key) const;
-    std::optional<size_t> get(const std::string& key) const;
-    size_t& operator[](const std::string& key);
-    vector<std::string> findRange( const std::string& lowKey, const std::string& highKey) const;
-    std::vector<std::string> keys() const;
+    std::optional<ValueType> get(const std::string& key) const;
+    ValueType& operator[](const std::string& key);
+    vector<ValueType> findRange( const std::string& lowKey, const std::string& highKey) const;
+    std::vector<KeyType> keys() const;
     size_t size() const;
     size_t getHeight() const;
     AVLTree(const AVLTree& other);
@@ -55,6 +52,18 @@ public:
     ~AVLTree();
     friend std::ostream& operator<<(ostream& os, const AVLTree & avlTree);
 
+private:
+    size_t treeSize;
+    AVLNode* root;
+
+    bool insert(const KeyType& key, AVLNode*& pointer); //return thing to insert
+    bool remove(const KeyType& key, AVLNode*& current); //return thing to delete
+    bool contains(const KeyType& key, AVLNode*& current); //return thing to check
+    std::optional<ValueType> get(const KeyType& key, AVLNode*& current);
+    ValueType& opget(const KeyType& key, AVLNode*& current);
+    vector<ValueType> findRange( const std::string& lowKey, AVLNode*& current) const;
+    vector<ValueType> findRange( AVLNode*& current, const std::string& highKey) const;
+    std::vector<KeyType> keys(AVLNode*& current) const;
     /* Helper methods for remove */
     // this overloaded remove will do the recursion to remove the node
     // bool remove(AVLNode*& current, KeyType key);

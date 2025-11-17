@@ -59,7 +59,14 @@ Duplicate keys are disallowed. The insert() method should return true if the ins
 successful, false otherwise. If the insertion was unsuccessful, such as when a duplicate is
 attempted to be inserted, the method should return false.
 */
-//bool AVLTree::insert(const std::string& key, size_t value)
+bool AVLTree::insert(const std::string& key, size_t value)
+{
+
+}
+bool AVLTree::insert(const std::string& key, AVLNode*& current)
+{
+
+}
 
 ///remove - bool down the tree to nullptr, add removeNode
 /*

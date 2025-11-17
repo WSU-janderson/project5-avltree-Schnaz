@@ -52,6 +52,13 @@ Copy constructor correctly creates an independent copy of an AVL tree
 
 AVLTree::operator= correctly creates an independent copy of the tree
 */
+
+AVLTree::AVLNode::AVLNode(const std::string key, const size_t value) : left(nullptr), right(nullptr)
+{
+    this->key = key;
+    this->value = value;
+}
+
 ///insert - bool down the tree to nullptr, add value and rebalance
 /*
 Insert a new key-value pair into the tree. After a sucessful insert, the tree is rebalanced if necessary.
@@ -61,11 +68,18 @@ attempted to be inserted, the method should return false.
 */
 bool AVLTree::insert(const std::string& key, size_t value)
 {
-
+insert(key, value, root);
 }
-bool AVLTree::insert(const std::string& key, AVLNode*& current)
+bool AVLTree::insert(const std::string& key, size_t value, AVLNode*& current)
 {
-
+    if (current==nullptr) //add node
+    {
+        current = new AVLNode(key, value);
+        return true;
+    }
+    if (key<current->key) insert(key, value, current->left);
+    if (key>current->key) insert(key, value, current->left);
+    return false;
 }
 
 ///remove - bool down the tree to nullptr, add removeNode

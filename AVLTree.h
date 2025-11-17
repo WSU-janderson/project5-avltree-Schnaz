@@ -26,6 +26,8 @@ protected:
         AVLNode* left;
         AVLNode* right;
 
+        AVLNode(KeyType key, ValueType value);
+
         // 0, 1 or 2
         size_t numChildren() const;
         // true or false
@@ -38,6 +40,7 @@ protected:
 
 public:
 
+    AVLTree();
     bool insert(const std::string& key, size_t value);
     bool remove(const std::string& key);
     bool contains(const std::string& key) const;
@@ -56,7 +59,10 @@ private:
     size_t treeSize;
     AVLNode* root;
 
-    bool insert(const KeyType& key, AVLNode*& pointer); //return thing to insert
+    /* Helper methods for recursion */
+
+    bool insert(const KeyType& key, size_t value, AVLNode*& pointer); //insert the thing
+    AVLNode*& getNode(const KeyType& key, AVLNode*& pointer); //gets the node in the key or returns nullptr
     bool remove(const KeyType& key, AVLNode*& current); //return thing to delete
     bool contains(const KeyType& key, AVLNode*& current); //return thing to check
     std::optional<ValueType> get(const KeyType& key, AVLNode*& current);
@@ -67,7 +73,7 @@ private:
     /* Helper methods for remove */
     // this overloaded remove will do the recursion to remove the node
     // bool remove(AVLNode*& current, KeyType key);
-    // removeNode contains the logic for actually removing a node based on the numebr of children
+    // removeNode contains the logic for actually removing a node based on the number of children
     bool removeNode(AVLNode*& current);
     // You will implement this, but it is needed for removeNode()
     void balanceNode(AVLNode*& node); //this is where node height assignments should be done

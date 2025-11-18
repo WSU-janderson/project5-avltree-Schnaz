@@ -2,6 +2,9 @@
 
 #include <string>
 
+using KeyType = string;
+using ValueType = size_t;
+
 /* Additional challenges
 
 insert(), remove(), contains(), get(), operator[], findRange(),
@@ -53,7 +56,7 @@ Copy constructor correctly creates an independent copy of an AVL tree
 AVLTree::operator= correctly creates an independent copy of the tree
 */
 
-AVLTree::AVLNode::AVLNode(const std::string key, const size_t value) : left(nullptr), right(nullptr)
+AVLTree::AVLNode::AVLNode(const KeyType key, const size_t value) : left(nullptr), right(nullptr)
 {
     this->key = key;
     this->value = value;
@@ -66,11 +69,11 @@ Duplicate keys are disallowed. The insert() method should return true if the ins
 successful, false otherwise. If the insertion was unsuccessful, such as when a duplicate is
 attempted to be inserted, the method should return false.
 */
-bool AVLTree::insert(const std::string& key, size_t value)
+bool AVLTree::insert(const KeyType& key, ValueType value)
 {
 insert(key, value, root);
 }
-bool AVLTree::insert(const std::string& key, size_t value, AVLNode*& current)
+bool AVLTree::insert(const KeyType& key, ValueType value, AVLNode*& current)
 {
     if (current==nullptr) //add node
     {
@@ -89,14 +92,32 @@ for the node that is removed will be released. After removing the key-value pair
 rebalanced if necessary. If the key was removed from the tree, remove() returns true, if the key
 was not in the tree, remove() returns false.
 */
-//bool AVLTree::remove(const std::string& key)
+bool AVLTree::remove(const KeyType& key)
+{
+    return removeNode(getNode(key, root));
+}
+AVLTree::AVLNode*& AVLTree::getNode(const KeyType& key, AVLNode*& current)
+{
+    if (current==nullptr) //add node
+    {
+        AVLNode* ptr = nullptr; //test this
+        return ptr;
+    }
+    if (key<current->key) return getNode(key, current->left);
+    if (key>current->key) return getNode(key, current->left);
+    return current;
+}
 
 ///contains - check if AVL tree contains the value
 /*
 The contains() method returns true if the key is in the tree and false if the key is not in the tree.
 The time complexity for contains() must be 𝒪︀(log2 𝑛).
 */
-//bool AVLTree::contains(const std::string& key) const
+bool AVLTree::contains(const KeyType& key)// const
+{
+    if (getNode(key, root) != nullptr) return true;
+    return false;
+}
 
 ///get - gets value associated with key value
 /*
@@ -107,25 +128,48 @@ have a valid value to return. This approach is nicer than designating a special 
 signify the return value is invalid. It’s also much better than throwing an exception if the key is
 not found.
 */
-//std::optional<size_t> AVLTree::get(const std::string& key) const
+optional<ValueType> AVLTree::get(const KeyType& key)// const
+{
+    AVLNode* node = getNode(key, root);
+    if (node==nullptr) return nullopt;
+    return node->value;
+}
 
-///operator[] overload - return reference to key's value
+///operator[] overload - return a reference to a key's value
 /*
 The bracket operator, operator[], allows us to use our map the same way various programming
 languages such as C++ and Python allow us to use keys to access values. The bracket operator will
 work like get() in so that it will return the value stored in the node with the given key. We can
 retrieve the value associated with a key by saying:
 */
-//size_t& AVLTree::operator[](const std::string& key)
+ValueType& AVLTree::operator[](const std::string& key)
+{
+    AVLNode* node = getNode(key, root);
+    return node->value;
+}
 
-///findRange - return a vector of all values between to keys
+///findRange - return a vector of all values between two keys
 /*
 The findRange() method should return a C++ std::vector of size_t containing all the values
 associated with keys ≥ lowKey and keys ≤ highKey. For each key found in the given range, there
 will be one value in the vector. If no matching key-value pairs are found, the function should return
 an empty vector.
 */
-//vector<std::string> AVLTree::findRange( const std::string& lowKey, const std::string& highKey) const
+vector<ValueType> AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey) const
+{
+    vector<ValueType> values;
+    findRange( const KeyType& lowKey, AVLNode*& root);
+    findRange( AVLNode*& root, const KeyType& highKey);
+
+}
+vector<ValueType> AVLTree::findRange( const KeyType& lowKey, AVLNode*& current)
+{
+
+}
+vector<ValueType> AVLTree::findRange( AVLNode*& current, const KeyType& highKey)
+{
+
+}
 
 ///keys - return a vector of all keys in tree
 /*

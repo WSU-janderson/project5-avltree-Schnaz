@@ -206,11 +206,22 @@ size_t AVLTree::getHeight() const
     return root->height;
 }
 
-///copy constructor
+///copy constructor - perform a deep copy
 /*
 perform a deep copy
 */
-//AVLTree::AVLTree(const AVLTree& other)
+AVLTree::AVLTree(const AVLTree& other)
+{
+
+}
+void AVLTree::copyNode(const AVLNode* current, AVLNode*& clone)
+{
+    if (current==nullptr) return;
+    clone=new AVLNode(current->key, current->value);
+
+    copyNode(current->left, clone->left);
+    copyNode(current->right, clone->right);
+}
 
 ///operator= overload - replace object with a deep copy of another
 /*
@@ -219,9 +230,13 @@ If we do not, the same thing happens if we don’t implement the copy constructo
 needs to also create a deep copy of the other tree. The main difference is the tree we want to copy
 into may already have had elements inserted, so that memory needs to be released.
 */
-//void AVLTree::operator=(const AVLTree& other)
+void AVLTree::operator=(const AVLTree& other)
+{
+    clearNode(root);
+    copyNode(other.root, root);
+}
 
-///deconstructor - make sure to deallocate allocated memory
+///deconstructor - deallocate allocated memory
 /*
 When an object goes out of scope, the memory used by its member variables is released back to the
 operating system. This means only the root variable is released, but not the memory root points
@@ -232,42 +247,56 @@ if it has a destructor defined, the destructor is called. Thus, we want our dest
 nodes in our tree (a postorder traversal?) and use delete to release the memory taken by each
 node.
 */
-//AVLTree::~AVLTree()
-
+AVLTree::~AVLTree()
+{
+    clearNode(root);
+}
+void AVLTree::clearNode(AVLNode*& current)
+{
+    if (current==nullptr) return;
+    clearNode(current->left);
+    clearNode(current->right);
+    delete current;
+}
 ///operator<< overload - print AVLTree to ostream
 /*
-Similar to other projects, we will store everything associated with a key-value pair in a node. The
-BSTNode (or AVLNode) should have, at a minimum, std::string key, size_t value, BSTNode* left,
-and BSTNode* right. Additionally, since the height() method needs to be 𝒪︀(1), you will also want to
-store a member in each node for the height of the node. The height will then need to be updated on
-every call to insert() and remove(). Storing the height in the node allows you to calculate a node’s
-height in 𝒪︀(1) by checking the height of it’s left and right children. It also allows you to return the
-height of the tree in 𝒪︀(1) as the height of a tree is the height of it’s root node.
-You also need to keep track of how many times a key of right is entered into that nodes left subtree.
+In addition to these methods of AVLTree, you will also implement an operator to easily print out
+the tree. The stream insertion operator, operator<<, is not a method of the AVLTree class, and as
+such does not have access to the private data of AVLTree. To get around this, you can declare
+operator<< as a friend function inside of the AVLTree class (put the keyword friend before the
+declaration, but not the definition), which will give it access to the private member data and
+functions.
 
-I recommend having in your BSTNode class methods to perform operations such as finding the current
-height of the node, finding the balance of the node, finding how many children the node has, and
-possibly whether or not a node is a leaf or not. Another good method would be to return the sum of the values
-located in a nodes subtrees.
+operator<< is another example of operator overloading in C++, similar to the bracket operator.
+This operator will allow us to print the contents of our tree using the normal syntax:
+cout << myAvlTree << endl;
 
-Keep in mind, these methods contribute to the time complexity of the algorithm they are utilized in, such
-as insert() and remove(). Therefore, to keep those operations in 𝒪︀(log2 𝑛), they cannot be any
-worse than 𝒪︀(log2 𝑛). If the method to find the height of a node is 𝒪︀(𝑛), that makes any operation
-that uses it at least 𝒪︀(𝑛).
+You should output the key-value pairs in the tree in a way that represents the structure of the tree.
+One approach would be to print the tree “sideways” using indentation to show the structure. For
+example, the tree in Figure 1 could be printed like Code Fig. 1 If you turn your head sideways, you
+can see how this represents the tree with {S: 83} as the root with no indentation, the root’s
+children {G: 71} and {Z: 90} indented a certain amount, and their children {C: 67}, {J: 74} and
+{X: 88} indented by twice as much.
+
+This style of printout can be achieved by doing a right-child-first in-order traversal of the tree,
+with each call passing in the current depth + 1 to use as an indentation factor
 */
 //friend std::ostream& operator<<(ostream& os, const AVLTree & avlTree)
 
 /// number of non-null children?
 size_t AVLTree::AVLNode::numChildren() const {
-    return 0;
+    size_t num = 0;
+    if (left!=nullptr) num++;
+    if (right!=nullptr) num++;
+    return num;
 }
 /// true if no children
 bool AVLTree::AVLNode::isLeaf() const {
-    return false;
+    return numChildren()==0;
 }
 /// returns auto-updating value stored as node height
 size_t AVLTree::AVLNode::getHeight() const {
-    return 0;
+    return height; //note: still need to add auto updating height to rebalance
 }
 /// remove node and reorder tree as needed
 bool AVLTree::removeNode(AVLNode*& current){

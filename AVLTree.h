@@ -69,6 +69,8 @@ private:
     ValueType& opget(const KeyType& key, AVLNode*& current);
     void findRange( const std::string& lowKey, const std::string& highKey, AVLNode*& current, vector<ValueType>& valueVec);
     void keys(AVLNode*& current, vector<KeyType>& keyVec);
+    void copyNode(const AVLNode* current, AVLNode*& clone);
+    void clearNode(AVLNode*& current);
     /* Helper methods for remove */
     // this overloaded remove will do the recursion to remove the node
     // bool remove(AVLNode*& current, KeyType key);

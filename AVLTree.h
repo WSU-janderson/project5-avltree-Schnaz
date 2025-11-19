@@ -46,8 +46,8 @@ public:
     bool contains(const KeyType& key);// const;
     optional<ValueType> get(const KeyType& key);// const;
     ValueType& operator[](const KeyType& key);
-    vector<ValueType> findRange( const KeyType& lowKey, const KeyType& highKey) const;
-    std::vector<KeyType> keys() const;
+    vector<ValueType> findRange( const KeyType& lowKey, const KeyType& highKey);// const;
+    vector<KeyType> keys();// const;
     size_t size() const;
     size_t getHeight() const;
     AVLTree(const AVLTree& other);
@@ -67,9 +67,8 @@ private:
     bool contains(const KeyType& key, AVLNode*& current); //return thing to check
     std::optional<ValueType> get(const KeyType& key, AVLNode*& current);
     ValueType& opget(const KeyType& key, AVLNode*& current);
-    vector<ValueType> findRange( const std::string& lowKey, AVLNode*& current, vector<ValueType>& vec);
-    vector<ValueType> findRange( AVLNode*& current, const std::string& highKey, vector<ValueType>& vec);
-    std::vector<KeyType> keys(AVLNode*& current) const;
+    void findRange( const std::string& lowKey, const std::string& highKey, AVLNode*& current, vector<ValueType>& valueVec);
+    void keys(AVLNode*& current, vector<KeyType>& keyVec);
     /* Helper methods for remove */
     // this overloaded remove will do the recursion to remove the node
     // bool remove(AVLNode*& current, KeyType key);

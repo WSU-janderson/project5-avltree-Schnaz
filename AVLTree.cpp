@@ -155,20 +155,18 @@ associated with keys ≥ lowKey and keys ≤ highKey. For each key found in the 
 will be one value in the vector. If no matching key-value pairs are found, the function should return
 an empty vector.
 */
-vector<ValueType> AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey) const
+vector<ValueType> AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey)
 {
-    vector<ValueType> values;
-    findRange( const KeyType& lowKey, AVLNode*& root);
-    findRange( AVLNode*& root, const KeyType& highKey);
+    vector<ValueType> valueVec;
+    findRange(lowKey, highKey, root, valueVec);
 
 }
-vector<ValueType> AVLTree::findRange( const KeyType& lowKey, AVLNode*& current)
+void AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey, AVLNode*& current, vector<ValueType>& valueVec)
 {
-
-}
-vector<ValueType> AVLTree::findRange( AVLNode*& current, const KeyType& highKey)
-{
-
+    if (current==nullptr) return;
+    if (lowKey < current->key) findRange(lowKey, highKey, current->left, valueVec);
+    if (lowKey <= current->key && current->key <= highKey) valueVec.push_back(current->value);
+    if (highKey > current->key) findRange(lowKey, highKey, current->right, valueVec);
 }
 
 ///keys - return a vector of all keys in tree
@@ -176,19 +174,37 @@ vector<ValueType> AVLTree::findRange( AVLNode*& current, const KeyType& highKey)
 The keys() method will return a std::vector with all of the keys currently in the tree. The length
 of the vector should be the same as the size of the tree
 */
-//std::vector<std::string> AVLTree::keys() const
+vector<KeyType> AVLTree::keys()
+{
+    vector<KeyType> keyVec;
+    keys(root, keyVec);
+    return keyVec;
+}
+void AVLTree::keys(AVLNode*& current, vector<KeyType>& keyVec)
+{
+    if (current==nullptr) return;
+    keys(current->left, keyVec);
+    keyVec.push_back(current->key);
+    keys(current->right, keyVec);
+}
 
 ///size - return stored value for AVL tree's number of nodes
 /*
 The size() method returns how many key-value pairs are in the tree
 */
-//size_t AVLTree::size() const
+size_t AVLTree::size() const
+{
+    return treeSize; //make sure insert and delete increments this value properly
+}
 
-///getHeight - return stored value for AVL tree's root node
+///getHeight - return stored value for the height of AVL tree's root node
 /*
 The getHeight() method will return the height of the AVL tree
 */
-//size_t AVLTree::getHeight() const
+size_t AVLTree::getHeight() const
+{
+    return root->height;
+}
 
 ///copy constructor
 /*

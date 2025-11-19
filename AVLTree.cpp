@@ -96,15 +96,24 @@ bool AVLTree::remove(const KeyType& key)
 {
     return removeNode(getNode(key, root));
 }
-AVLTree::AVLNode*& AVLTree::getNode(const KeyType& key, AVLNode*& current)
+AVLTree::AVLNode* AVLTree::getNode(const KeyType& key, AVLNode* current)
 {
     if (current==nullptr) //add node
     {
-        AVLNode* ptr = nullptr; //test this
-        return ptr;
+        return nullptr;
     }
     if (key<current->key) return getNode(key, current->left);
     if (key>current->key) return getNode(key, current->left);
+    return current;
+}
+const AVLTree::AVLNode* AVLTree::readNode(const KeyType& key, const AVLNode* current) const
+{
+    if (current==nullptr) //add node
+    {
+        return nullptr;
+    }
+    if (key<current->key) return readNode(key, current->left);
+    if (key>current->key) return readNode(key, current->left);
     return current;
 }
 
@@ -113,9 +122,9 @@ AVLTree::AVLNode*& AVLTree::getNode(const KeyType& key, AVLNode*& current)
 The contains() method returns true if the key is in the tree and false if the key is not in the tree.
 The time complexity for contains() must be 𝒪︀(log2 𝑛).
 */
-bool AVLTree::contains(const KeyType& key)// const
+bool AVLTree::contains(const KeyType& key) const
 {
-    if (getNode(key, root) != nullptr) return true;
+    if (readNode(key, root) != nullptr) return true;
     return false;
 }
 
@@ -128,9 +137,9 @@ have a valid value to return. This approach is nicer than designating a special 
 signify the return value is invalid. It’s also much better than throwing an exception if the key is
 not found.
 */
-optional<ValueType> AVLTree::get(const KeyType& key)// const
+optional<ValueType> AVLTree::get(const KeyType& key) const
 {
-    AVLNode* node = getNode(key, root);
+    const AVLNode* node = readNode(key, root);
     if (node==nullptr) return nullopt;
     return node->value;
 }
@@ -142,7 +151,7 @@ languages such as C++ and Python allow us to use keys to access values. The brac
 work like get() in so that it will return the value stored in the node with the given key. We can
 retrieve the value associated with a key by saying:
 */
-ValueType& AVLTree::operator[](const std::string& key)
+ValueType& AVLTree::operator[](const KeyType& key)
 {
     AVLNode* node = getNode(key, root);
     return node->value;
@@ -155,13 +164,13 @@ associated with keys ≥ lowKey and keys ≤ highKey. For each key found in the 
 will be one value in the vector. If no matching key-value pairs are found, the function should return
 an empty vector.
 */
-vector<ValueType> AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey)
+vector<ValueType> AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey) const
 {
     vector<ValueType> valueVec;
     findRange(lowKey, highKey, root, valueVec);
-
+    return valueVec;
 }
-void AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey, AVLNode*& current, vector<ValueType>& valueVec)
+void AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey, const AVLNode* current, vector<ValueType>& valueVec) const
 {
     if (current==nullptr) return;
     if (lowKey < current->key) findRange(lowKey, highKey, current->left, valueVec);
@@ -174,13 +183,13 @@ void AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey, AVLNode*
 The keys() method will return a std::vector with all of the keys currently in the tree. The length
 of the vector should be the same as the size of the tree
 */
-vector<KeyType> AVLTree::keys()
+vector<KeyType> AVLTree::keys() const
 {
     vector<KeyType> keyVec;
     keys(root, keyVec);
     return keyVec;
 }
-void AVLTree::keys(AVLNode*& current, vector<KeyType>& keyVec)
+void AVLTree::keys(AVLNode* current, vector<KeyType>& keyVec) const
 {
     if (current==nullptr) return;
     keys(current->left, keyVec);
@@ -299,7 +308,7 @@ size_t AVLTree::AVLNode::getHeight() const {
     return height; //note: still need to add auto updating height to rebalance
 }
 /// remove node and reorder tree as needed
-bool AVLTree::removeNode(AVLNode*& current){
+bool AVLTree::removeNode(AVLNode* current){
     if (!current) {
         return false;
     }
@@ -328,12 +337,12 @@ bool AVLTree::removeNode(AVLNode*& current){
         }
         std::string newKey = smallestInRight->key;
         int newValue = smallestInRight->value;
-        remove(root, smallestInRight->key); // delete this one
+        remove(root, smallestInRight->key); // delete this one write helper function FIXME
 
         current->key = newKey;
         current->value = newValue;
 
-        current->height = current->getHeight();
+        current->height = current->getHeight(); //FIXME
         balanceNode(current);
 
         return true; // we already deleted the one we needed to so return
@@ -346,6 +355,28 @@ bool AVLTree::removeNode(AVLNode*& current){
 //bool AVLTree::remove(AVLNode *&current, KeyType key) {
 //    return false;
 //}
-///// checks every parent node if needs rebalancing and rebalances;
-//void AVLTree::balanceNode(AVLNode *&node) {
-//}
+/// checks every parent node if needs rebalancing and rebalances;
+void AVLTree::balanceNode(AVLNode *current)
+{
+balance(current->key, root);
+}
+size_t AVLTree::balance(const KeyType& key, AVLNode *&current) {
+    size_t leftHeight = 0;
+    size_t rightHeight = 0;
+    if (key<current->key && current) leftHeight = balance(key, current->left);
+    if (key>current->key) rightHeight = balance(key, current->left);
+
+
+
+    if (current->isLeaf()) current->height=0;
+    if (current->numChildren() == 1)
+    {
+        if (current->right) current->height = current->right->height + 1;
+        else current->height = current->left->height + 1;
+    }
+    if (current->numChildren() == 2)
+    {
+
+    }
+    return current->height;
+}

@@ -43,11 +43,11 @@ public:
     AVLTree();
     bool insert(const KeyType& key, size_t value);
     bool remove(const KeyType& key);
-    bool contains(const KeyType& key);// const;
-    optional<ValueType> get(const KeyType& key);// const;
+    bool contains(const KeyType& key) const;
+    optional<ValueType> get(const KeyType& key) const;
     ValueType& operator[](const KeyType& key);
-    vector<ValueType> findRange( const KeyType& lowKey, const KeyType& highKey);// const;
-    vector<KeyType> keys();// const;
+    vector<ValueType> findRange( const KeyType& lowKey, const KeyType& highKey) const;
+    vector<KeyType> keys() const;
     size_t size() const;
     size_t getHeight() const;
     AVLTree(const AVLTree& other);
@@ -62,22 +62,24 @@ private:
     /* Helper methods for recursion */
 
     bool insert(const KeyType& key, size_t value, AVLNode*& pointer); //insert the thing
-    AVLNode*& getNode(const KeyType& key, AVLNode*& pointer); //gets the node in the key or returns nullptr
-    bool remove(const KeyType& key, AVLNode*& current); //return thing to delete
+    AVLNode* getNode(const KeyType& key, AVLNode* pointer); //gets the node in the key or returns nullptr
+    const AVLNode* readNode(const KeyType& key, const AVLNode* pointer) const;
+    bool remove(const KeyType& key, AVLNode* current); //return thing to delete
     bool contains(const KeyType& key, AVLNode*& current); //return thing to check
     std::optional<ValueType> get(const KeyType& key, AVLNode*& current);
     ValueType& opget(const KeyType& key, AVLNode*& current);
-    void findRange( const std::string& lowKey, const std::string& highKey, AVLNode*& current, vector<ValueType>& valueVec);
-    void keys(AVLNode*& current, vector<KeyType>& keyVec);
+    void findRange( const std::string& lowKey, const std::string& highKey, const AVLNode* current, vector<ValueType>& valueVec) const;
+    void keys(AVLNode* current, vector<KeyType>& keyVec) const;
     void copyNode(const AVLNode* current, AVLNode*& clone);
     void clearNode(AVLNode*& current);
     /* Helper methods for remove */
     // this overloaded remove will do the recursion to remove the node
     // bool remove(AVLNode*& current, KeyType key);
     // removeNode contains the logic for actually removing a node based on the number of children
-    bool removeNode(AVLNode*& current);
+    bool removeNode(AVLNode* current);
     // You will implement this, but it is needed for removeNode()
-    void balanceNode(AVLNode*& node); //this is where node height assignments should be done
+    void balanceNode(AVLNode* node); //this is where node height assignments should be done
+    size_t balance(const KeyType& key, AVLNode*& node);
 
 };
 

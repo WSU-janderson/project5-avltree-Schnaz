@@ -7,71 +7,33 @@
 using KeyType = string;
 using ValueType = size_t;
 
-/* Additional challenges
-
-insert(), remove(), contains(), get(), operator[], findRange(),
-keys(), the copy constructor, the assignment operator, and the destructor
-!!!must utilize recursion!!!
-
-insert(), remove(), contains(),  get(), operator[],
-𝒪︀(log2 𝑛)
-
-size(), getHeight()
-𝒪︀(1).
+///Constructor for AVLNode
+/*
+This creates a node with the chosen key and value, with left and right set to null
+It also allows for the values of AVLNode to be assigned on creation
 */
-
-/* Graded functions:
-
-AVLTree::insert() stores key-value pairs in the tree and correctly rejects duplicate
-keys. After insert() the tree remains balanced. Time complexity of insert() is
-𝒪︀(log2 𝑛)
-
-AVLTree::remove() correctly finds and deletes nodes from the tree without interfering
-with subsequent search and insert operations. After remove() tree remains balanced.
-Time complexity of remove is 𝒪︀(log2 𝑛).
-
-AVLTree::contains() correctly returns true if the key is in the tree and false
-otherwise. Time complexity of contains is 𝒪︀(log2 𝑛).
-
-AVLTree::get() correctly finds, and returns the value associated if the key is found.
-Returns nullopt when the key is not in the tree. Time complexity of get is 𝒪︀(log2 𝑛).
-
-AVLTree::operator[] correctly returns a reference to the value associated with the
-given key. There is no requirement for your project to handle missing keys in
-operator[] Time complexity of operator[] is 𝒪︀(log2 𝑛).
-
-AVLTree::findRange() correctly returns a C++ std::vector<size_t> matching the
-keys in the specified range
-
-AVLTree::keys() correctly returns a std::vector<size_t> with all of the keys
-currently stored in the tree
-
-AVLTree::size() correctly returns the number of key-value pairs in the tree in 𝒪︀(1).
-time
-
-AVLTree::getHeight() correctly returns the height of the tree in 𝒪︀(1). time.
-
-operator<< is correctly overloaded as described above
-
-Copy constructor correctly creates an independent copy of an AVL tree
-
-AVLTree::operator= correctly creates an independent copy of the tree
-*/
-
 AVLTree::AVLNode::AVLNode(const KeyType key, const size_t value) : left(nullptr), right(nullptr)
 {
     this->key = key;
     this->value = value;
 }
 
-AVLTree::AVLTree() : treeSize(0), root(nullptr) {}
-
-///insert - bool down the tree to nullptr, add value and rebalance
+///Constructor for AVLTree
 /*
-Insert a new key-value pair into the tree. After a sucessful insert, the tree is rebalanced if necessary.
-Duplicate keys are disallowed. The insert() method should return true if the insertion was
-successful, false otherwise. If the insertion was unsuccessful, such as when a duplicate is
-attempted to be inserted, the method should return false.
+This creates the AVL Tree which is a binary search tree that automatically balances itslef
+This initializes the two values stored in the tree to null
+*/
+AVLTree::AVLTree() : treeSize(0), root(nullptr)
+{
+}
+
+///insert - inserts a key/value pair into the tree, automatically rebalancing if necessary
+/*
+This is the public version of the insert method, which calls the private recursive one.
+After adding the value to the tree, it runs the balance method to update the heights
+and rebalance the tree
+
+Returns: True if a value was inserted, False if the value already exists
 */
 bool AVLTree::insert(const KeyType& key, ValueType value)
 {
@@ -80,6 +42,12 @@ bool AVLTree::insert(const KeyType& key, ValueType value)
     return status;
 }
 
+///insert (helper) - private recursive helper function for the public insert function
+/*
+This function recursively iterates through the tree until it reaches a null pointer,
+
+returns: true down the chain if node was successfully inserted, or false if the node already exists
+*/
 bool AVLTree::insert(const KeyType& key, ValueType value, AVLNode*& current)
 {
     if (current == nullptr) //add node
@@ -104,12 +72,13 @@ bool AVLTree::insert(const KeyType& key, ValueType value, AVLNode*& current)
     return false;
 }
 
-///remove - bool down the tree to nullptr, add removeNode
+///remove - removes a key/value pair from the tree, automatically rebalancing if necessary
 /*
-If the key is in the tree, remove() will delete the key-value pair from the tree. The memory allocated
-for the node that is removed will be released. After removing the key-value pair, the tree is
-rebalanced if necessary. If the key was removed from the tree, remove() returns true, if the key
-was not in the tree, remove() returns false.
+This is the public version of the remove method, which calls the private recursive one.
+After removing the value to the tree, it runs the balance method to update the heights
+and rebalance the tree
+
+Returns: True if a value was removed, False if the value doesn't exist
 */
 bool AVLTree::remove(const KeyType& key)
 {
@@ -117,6 +86,15 @@ bool AVLTree::remove(const KeyType& key)
     balance(key, root);
     return status;
 }
+
+///remove (helper) - private recursive helper function for the public remove function
+/*
+This function recursively iterates through the tree until it reaches a matching key, calling removeNode
+once it has been found. It will stop and return false if it reaches a nullpointer
+which signifies that the key is not in the tree.
+
+returns: true if the node is found and successfully removed, or false if it reaches a null pointer
+*/
 bool AVLTree::remove(const KeyType& key, AVLNode*& current)
 {
     if (current == nullptr)
@@ -139,6 +117,13 @@ bool AVLTree::remove(const KeyType& key, AVLNode*& current)
     return true;
 }
 
+///getNode (helper) - returns the pointer to the corresponding key for the operator[] overload
+/*
+This recursive function returns the pointer that corresponds with the provided key
+If the key is reached, it will return the found pointer. Otherwise, it will return nullptr.
+
+Returns nullptr if key is not present, or its pointer if it is
+*/
 AVLTree::AVLNode* AVLTree::getNode(const KeyType& key, AVLNode* current)
 {
     if (current == nullptr)
@@ -150,6 +135,13 @@ AVLTree::AVLNode* AVLTree::getNode(const KeyType& key, AVLNode* current)
     return current;
 }
 
+///readNode (helper) - returns a read only pointer to the corresponding key for the get and contains functions
+/*
+This function returns the pointer to the node that corresponds to the given key, but the returned value is a
+constant so as to work with constant functions.
+
+Returns nullptr if key isn't present, or the node's pointer if it is
+*/
 const AVLTree::AVLNode* AVLTree::readNode(const KeyType& key, const AVLNode* current) const
 {
     if (current == nullptr) //add node
@@ -161,10 +153,11 @@ const AVLTree::AVLNode* AVLTree::readNode(const KeyType& key, const AVLNode* cur
     return current;
 }
 
-///contains - check if AVL tree contains the value
+///contains - check if AVL tree contains the key
 /*
-The contains() method returns true if the key is in the tree and false if the key is not in the tree.
-The time complexity for contains() must be 𝒪︀(log2 𝑛).
+contains checks the tree for the key,
+
+returns true if the key is in the tree, or false if the key is not in the tree.
 */
 bool AVLTree::contains(const KeyType& key) const
 {
@@ -172,14 +165,12 @@ bool AVLTree::contains(const KeyType& key) const
     return false;
 }
 
-///get - gets value associated with key value
+///get - gets value from the tree associated with the key
 /*
 If the key is found in the tree, get() will return the value associated with that key. If the key is not
-in the tree, get() will return something called std::nullopt, which is a special value in C++. The
-get() method returns std::optional<size_t>, which is a way to denote a method might not
-have a valid value to return. This approach is nicer than designating a special value, like −1, to
-signify the return value is invalid. It’s also much better than throwing an exception if the key is
-not found.
+in the tree, get() will return something called std::nullopt
+
+returns: nullopt if key is not in the tree, or its value if it is
 */
 optional<ValueType> AVLTree::get(const KeyType& key) const
 {
@@ -190,10 +181,9 @@ optional<ValueType> AVLTree::get(const KeyType& key) const
 
 ///operator[] overload - return a reference to a key's value
 /*
-The bracket operator, operator[], allows us to use our map the same way various programming
-languages such as C++ and Python allow us to use keys to access values. The bracket operator will
-work like get() in so that it will return the value stored in the node with the given key. We can
-retrieve the value associated with a key by saying:
+overloads the [] operator so that the values of the tree can be accessed and modified directly
+
+returns the value in the tree corresponding to the key placed between the brackets
 */
 ValueType& AVLTree::operator[](const KeyType& key)
 {
@@ -203,10 +193,10 @@ ValueType& AVLTree::operator[](const KeyType& key)
 
 ///findRange - return a vector of all values between two keys
 /*
-The findRange() method should return a C++ std::vector of size_t containing all the values
-associated with keys ≥ lowKey and keys ≤ highKey. For each key found in the given range, there
-will be one value in the vector. If no matching key-value pairs are found, the function should return
-an empty vector.
+Find range is a method to quickly check the values within parts of the tree
+it is handled so that the values are displayed in ascending key order (via a left-right traversal)
+
+returns a vector of values returned from every key between the two input keys
 */
 vector<ValueType> AVLTree::findRange(const KeyType& lowKey, const KeyType& highKey) const
 {
@@ -215,6 +205,12 @@ vector<ValueType> AVLTree::findRange(const KeyType& lowKey, const KeyType& highK
     return valueVec;
 }
 
+///findRange (helper) - populates a vector with all values between two keys
+/*
+This helper function recursively attaches every vector within range from left to right
+
+returns void, as the vector was passed in by reference (to be modified)
+*/
 void AVLTree::findRange(const KeyType& lowKey, const KeyType& highKey, const AVLNode* current,
                         vector<ValueType>& valueVec) const
 {
@@ -236,6 +232,12 @@ vector<KeyType> AVLTree::keys() const
     return keyVec;
 }
 
+///keys (helper) - populates a vector with all keys
+/*
+this recursive function handles populating a vector with keys in order
+
+returns void, as the vector is modified by reference
+*/
 void AVLTree::keys(AVLNode* current, vector<KeyType>& keyVec) const
 {
     if (current == nullptr) return;
@@ -261,15 +263,22 @@ size_t AVLTree::getHeight() const
 {
     return root->height;
 }
+
+///nodeHeight (helper) - return height of a node based off of it's children
+/*
+This function is useful in updating the heights of nodes and allows for much more concise code
+
+returns the greater height between children with an additional +1 for the parent
+*/
 size_t AVLTree::AVLNode::nodeHeight() const
 {
     if (isLeaf()) return 0;
-    if (numChildren()==1)
+    if (numChildren() == 1)
     {
         if (left) return left->height + 1;
         return right->height + 1;
     }
-    return max(left->height,right->height) + 1;
+    return max(left->height, right->height) + 1;
 }
 
 ///copy constructor - perform a deep copy
@@ -282,6 +291,13 @@ AVLTree::AVLTree(const AVLTree& other)
     treeSize = other.treeSize;
 }
 
+///copyNode (helper) - recursively go through a tree and copy its contents over
+/*
+this function populates a tree with the contents of another through recursion
+it doesn't check if the clone was wiped before copying, so that should be done beforehand
+
+returns a pointer to a node to expedite the process
+*/
 AVLTree::AVLNode* AVLTree::copyNode(const AVLNode* current, AVLNode*& clone)
 {
     if (current == nullptr) return nullptr;
@@ -295,10 +311,10 @@ AVLTree::AVLNode* AVLTree::copyNode(const AVLNode* current, AVLNode*& clone)
 
 ///operator= overload - replace object with a deep copy of another
 /*
-Along with operator[] and operator<<, we can overload operator=, or the assignment operator.
-If we do not, the same thing happens if we don’t implement the copy constructor. So, operator=
-needs to also create a deep copy of the other tree. The main difference is the tree we want to copy
-into may already have had elements inserted, so that memory needs to be released.
+The overload of the = operator allows one to overwrite a tree with another
+this will recursively both clear up the memory in the tree and copy over the other tree's contents
+
+returns void
 */
 void AVLTree::operator=(const AVLTree& other)
 {
@@ -309,20 +325,17 @@ void AVLTree::operator=(const AVLTree& other)
 
 ///deconstructor - deallocate allocated memory
 /*
-When an object goes out of scope, the memory used by its member variables is released back to the
-operating system. This means only the root variable is released, but not the memory root points
-to. In order to release the memory occupied by our nodes, we need to implement what C++ calls the
-destructor. A better name might be deconstructor, because as the constructor initializes any
-memory for the object, the destructor will release that memory. When an object goes out of scope,
-if it has a destructor defined, the destructor is called. Thus, we want our destructor to visit all the
-nodes in our tree (a postorder traversal?) and use delete to release the memory taken by each
-node.
+calls the clear function to make sure all memory allocated to nodes within are deallocated
 */
 AVLTree::~AVLTree()
 {
     clearNode(root);
 }
 
+///clearNode (helper) - recursively clears out all nodes for the deleting or overwriting of trees
+/*
+this function recursively goes through a tree, deleting all nodes on the way back
+*/
 void AVLTree::clearNode(AVLNode*& current)
 {
     if (current == nullptr) return;
@@ -333,55 +346,57 @@ void AVLTree::clearNode(AVLNode*& current)
 
 ///operator<< overload - print AVLTree to ostream
 /*
-In addition to these methods of AVLTree, you will also implement an operator to easily print out
-the tree. The stream insertion operator, operator<<, is not a method of the AVLTree class, and as
-such does not have access to the private data of AVLTree. To get around this, you can declare
-operator<< as a friend function inside of the AVLTree class (put the keyword friend before the
-declaration, but not the definition), which will give it access to the private member data and
-functions.
-
-operator<< is another example of operator overloading in C++, similar to the bracket operator.
-This operator will allow us to print the contents of our tree using the normal syntax:
-cout << myAvlTree << endl;
-
-You should output the key-value pairs in the tree in a way that represents the structure of the tree.
-One approach would be to print the tree “sideways” using indentation to show the structure. For
-example, the tree in Figure 1 could be printed like Code Fig. 1 If you turn your head sideways, you
-can see how this represents the tree with {S: 83} as the root with no indentation, the root’s
-children {G: 71} and {Z: 90} indented a certain amount, and their children {C: 67}, {J: 74} and
-{X: 88} indented by twice as much.
-
-This style of printout can be achieved by doing a right-child-first in-order traversal of the tree,
-with each call passing in the current depth + 1 to use as an indentation factor
+The overload of the << operator aims to let the AVLTree be output to the ostream
+Since I am used to working on trees through the use of vectors, I figured a neat way
+to show the form of a tree would be through nested brackets:
+    [B:2 [A:1 [] []], [C:3 [] []]]
+I also included the heights of each node to help with testing
 */
-ostream& operator<<(ostream& os, const AVLTree & avlTree)
+ostream& operator<<(ostream& os, const AVLTree& avlTree)
 {
     string output;
     AVLTree::ostreamFeed(avlTree.root, output);
     os << output << endl;
     return os;
 }
+
+///ostreamFeed (helper) - turn entire AVLTree into a string
+/*
+This function recursively goes through the entire tree turning it into a string
+that somewhat resembles the nested vectors I am familiar with.
+
+There is no need to return the string as it is passed by reference
+*/
 void AVLTree::ostreamFeed(AVLNode* current, string& output)
 {
-    if (current==nullptr)
+    //Print empty brackets to signify an null pointer
+    if (current == nullptr)
     {
-        output+="[]";
+        output += "[]";
         return;
     }
-    output+="[";
-    output+=current->key;
-    output+=":";
-    output+=to_string(current->value);
-    output+=" (";
-    output+=to_string(current->height);
-    output+=") ";
+
+    //building a bunch of nested vectors to print out the tree:
+    //[key:value (height) [leftchild], [rightchild]]
+    output += "[";
+    output += current->key;
+    output += ":";
+    output += to_string(current->value);
+    output += " (";
+    output += to_string(current->height);
+    output += ") ";
     ostreamFeed(current->left, output);
-    output+=", ";
+    output += ", ";
     ostreamFeed(current->right, output);
-    output+="]";
+    output += "]";
 }
 
-/// number of non-null children?
+/// numChildren (helper) - number of non-null children
+/*
+This function helps determine how many branches of the tree need to be taken into account
+
+returns the number of branches (children)
+*/
 size_t AVLTree::AVLNode::numChildren() const
 {
     size_t num = 0;
@@ -390,13 +405,21 @@ size_t AVLTree::AVLNode::numChildren() const
     return num;
 }
 
-/// true if no children
+/// isLeaf (helper) - returns whether or not the node is a leaf node
+/*
+This function helps with logic regarding nodes without children
+*/
 bool AVLTree::AVLNode::isLeaf() const
 {
     return numChildren() == 0;
 }
 
-/// remove node and reorder tree as needed
+/// removeNode (helper) - removes a node given by address
+/*
+This function handles the complex removal logic for when a node is removed from the AVL Tree
+
+it returns true or false whether or not it functioned properly
+*/
 bool AVLTree::removeNode(AVLNode*& current)
 {
     if (!current)
@@ -437,7 +460,7 @@ bool AVLTree::removeNode(AVLNode*& current)
         }
         std::string newKey = smallestInRight->key;
         size_t newValue = smallestInRight->value;
-        cout<<newKey<<endl;
+        cout << newKey << endl;
         remove(smallestInRight->key, root);
 
         current->key = newKey;
@@ -454,28 +477,29 @@ bool AVLTree::removeNode(AVLNode*& current)
     return true;
 }
 
-///// bool down tree and run removeNode when node is found
-//bool AVLTree::remove(AVLNode *&current, KeyType key) {
-//    return false;
-//}
-/// checks every parent node if needs rebalancing and rebalances;
+///balanceNode (helper) - get key and get balanced
+/*
+This helper function merely grabs the key for use in the primary helper function
+*/
 void AVLTree::balanceNode(AVLNode* current)
 {
     balance(current->key, root);
 }
 
-//needs to return
+///balance (helper) - balances the tree up to the specified node, updating the node heights in the process
+/*
+This function handles both updating the node heights as well as performing rotations to rebalance the tree
+*/
 void AVLTree::balance(const KeyType& key, AVLNode*& current)
 {
-
     //get heights of nodes to determine balance
     long long leftHeight = -1;
     long long rightHeight = -1;
 
-    //traverse the tree and get balance
+    //traverse the tree and get left & right node heights
     if (current->left)
     {
-        if (key < current->key ) balance(key, current->left);
+        if (key < current->key) balance(key, current->left);
         leftHeight = current->left->height;
     }
     if (current->right)
@@ -484,8 +508,8 @@ void AVLTree::balance(const KeyType& key, AVLNode*& current)
         rightHeight = current->right->height;
     }
     current->height = current->nodeHeight();
-    // bar unneccisarry calculations
 
+    // bar unneccisarry calculations
     if (current->height < 2) return;
 
     //check if tree needs rebalancing
@@ -493,7 +517,6 @@ void AVLTree::balance(const KeyType& key, AVLNode*& current)
 
     if (balance >= 2) // hook is to the left
     {
-
         // check balance of hook node reusing left and right height variables
         leftHeight = -1;
         rightHeight = -1;
@@ -504,7 +527,6 @@ void AVLTree::balance(const KeyType& key, AVLNode*& current)
         {
             rotateLeft(current->left);
             rotateRight(current);
-
         }
         else //left-left
         {
@@ -513,7 +535,6 @@ void AVLTree::balance(const KeyType& key, AVLNode*& current)
     }
     if (balance <= -2) // hook is to the right
     {
-
         leftHeight = -1;
         rightHeight = -1;
         if (current->right->left) leftHeight = current->right->left->height;
@@ -522,36 +543,46 @@ void AVLTree::balance(const KeyType& key, AVLNode*& current)
 
         if (balance > 0) //right-left
         {
-
             rotateRight(current->right);
             rotateLeft(current);
         }
         else //right-right
         {
-
             rotateLeft(current);
         }
     }
 }
+
+///rotateRight (helper) - do a right rotation on nodes
+/*
+This is a helper function for balance that exectutes a right rotation of the nodes
+*/
 void AVLTree::rotateRight(AVLNode*& current)
 {
-
+    //move nodes
     AVLNode* hold = current->left->right;
     current->left->right = current;
     current = current->left;
     current->right->left = hold;
 
+    //update heights
     current->right->height = current->right->nodeHeight();
     current->height = current->nodeHeight();
 }
+
+///rotateLeft (helper) - do a left rotation on nodes
+/*
+This is a helper function for balance that exectutes a left rotation of the nodes
+*/
 void AVLTree::rotateLeft(AVLNode*& current)
 {
-
+    //move nodes
     AVLNode* hold = current->right->left;
     current->right->left = current;
     current = current->right;
     current->left->right = hold;
+
+    //update heights
     current->left->height = current->left->nodeHeight();
     current->height = current->nodeHeight();
-
 }

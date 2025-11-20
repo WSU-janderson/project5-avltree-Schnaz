@@ -75,7 +75,9 @@ attempted to be inserted, the method should return false.
 */
 bool AVLTree::insert(const KeyType& key, ValueType value)
 {
-    return insert(key, value, root);
+    bool status = insert(key, value, root);
+    balance(key, root);
+    return status;
 }
 
 bool AVLTree::insert(const KeyType& key, ValueType value, AVLNode*& current)
@@ -85,7 +87,6 @@ bool AVLTree::insert(const KeyType& key, ValueType value, AVLNode*& current)
         current = new AVLNode(key, value);
         treeSize++;
         current->height = 0;
-        balance(current->key, root);
         return true;
     }
     if (key < current->key)
@@ -112,7 +113,9 @@ was not in the tree, remove() returns false.
 */
 bool AVLTree::remove(const KeyType& key)
 {
-    return remove(key, root);
+    bool status = remove(key, root);
+    balance(key, root);
+    return status;
 }
 bool AVLTree::remove(const KeyType& key, AVLNode*& current)
 {
@@ -266,7 +269,6 @@ size_t AVLTree::AVLNode::nodeHeight() const
         if (left) return left->height + 1;
         return right->height + 1;
     }
-    cout<<"sup"<<endl; //FIXME
     return max(left->height,right->height) + 1;
 }
 
@@ -441,7 +443,7 @@ bool AVLTree::removeNode(AVLNode*& current)
         current->value = newValue;
 
         current->height = current->nodeHeight();
-        balanceNode(current);
+        //balanceNode(current);
 
         return true; // we already deleted the one we needed to so return
     }
@@ -464,7 +466,7 @@ void AVLTree::balanceNode(AVLNode* current)
 //needs to return
 void AVLTree::balance(const KeyType& key, AVLNode*& current)
 {
-    //cout<<current->height<<endl; //FIXME
+
     //get heights of nodes to determine balance
     long long leftHeight = -1;
     long long rightHeight = -1;
@@ -472,23 +474,25 @@ void AVLTree::balance(const KeyType& key, AVLNode*& current)
     //traverse the tree and get balance
     if (current->left)
     {
-        leftHeight = current->left->height;
         if (key < current->key ) balance(key, current->left);
+        leftHeight = current->left->height;
     }
     if (current->right)
     {
-        rightHeight = current->right->height;
         if (key > current->key) balance(key, current->right);
+        rightHeight = current->right->height;
     }
     current->height = current->nodeHeight();
     // bar unneccisarry calculations
+
     if (current->height < 2) return;
 
     //check if tree needs rebalancing
     long long balance = leftHeight - rightHeight;
-    //cout<<to_string(balance)<<endl; //FIXME
+
     if (balance >= 2) // hook is to the left
     {
+
         // check balance of hook node reusing left and right height variables
         leftHeight = -1;
         rightHeight = -1;
@@ -508,25 +512,29 @@ void AVLTree::balance(const KeyType& key, AVLNode*& current)
     }
     if (balance <= -2) // hook is to the right
     {
+
         leftHeight = -1;
         rightHeight = -1;
-        if (current->right->left) leftHeight = current->left->left->height;
-        if (current->right->right) rightHeight = current->left->right->height;
+        if (current->right->left) leftHeight = current->right->left->height;
+        if (current->right->right) rightHeight = current->right->right->height;
         balance = leftHeight - rightHeight;
+
         if (balance > 0) //right-left
         {
+
             rotateRight(current->right);
             rotateLeft(current);
         }
         else //right-right
         {
+
             rotateLeft(current);
         }
     }
 }
 void AVLTree::rotateRight(AVLNode*& current)
 {
-    cout<<"rotateRight"<<endl;
+
     AVLNode* hold = current->left->right;
     current->left->right = current;
     current = current->left;
@@ -537,12 +545,12 @@ void AVLTree::rotateRight(AVLNode*& current)
 }
 void AVLTree::rotateLeft(AVLNode*& current)
 {
-    cout<<"rotateLeft"<<endl;
+
     AVLNode* hold = current->right->left;
     current->right->left = current;
     current = current->right;
     current->left->right = hold;
-
     current->left->height = current->left->nodeHeight();
     current->height = current->nodeHeight();
+
 }

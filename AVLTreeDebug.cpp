@@ -86,7 +86,6 @@ int main() {
      cout << endl << endl;
      cout << tree << endl;
 
-    //getting a second K???
      removeResult = tree.remove("C"); // "C" has one child, single rotate left
      cout << endl << endl;
      cout << tree << endl;

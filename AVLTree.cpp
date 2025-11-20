@@ -131,7 +131,7 @@ bool AVLTree::remove(const KeyType& key, AVLNode*& current)
     }
     if (key > current->key)
     {
-        bool resize = remove(key, current->left);
+        bool resize = remove(key, current->right);
         if (resize) current->height = current->nodeHeight();
         return resize;
     }
@@ -437,6 +437,7 @@ bool AVLTree::removeNode(AVLNode*& current)
         }
         std::string newKey = smallestInRight->key;
         size_t newValue = smallestInRight->value;
+        cout<<newKey<<endl;
         remove(smallestInRight->key, root);
 
         current->key = newKey;

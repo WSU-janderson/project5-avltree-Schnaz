@@ -403,7 +403,7 @@ bool AVLTree::removeNode(AVLNode*& current)
         }
         std::string newKey = smallestInRight->key;
         size_t newValue = smallestInRight->value;
-        remove(smallestInRight->key, root); //FIXME this is a different kind of removal
+        remove(smallestInRight->key, root);
 
         current->key = newKey;
         current->value = newValue;
@@ -430,42 +430,54 @@ void AVLTree::balanceNode(AVLNode* current)
 }
 
 //needs to return
-size_t AVLTree::balance(const KeyType& key, AVLNode*& current)
+void AVLTree::balance(const KeyType& key, AVLNode*& current)
 {
     //get heights of nodes to determine balance
-    size_t leftHeight = 0;
-    size_t rightHeight = 0;
-    if (key < current->key && current->left) leftHeight = balance(key, current->left);
-    if (key > current->key && current->right) rightHeight = balance(key, current->left);
-    current->height = max(leftHeight, rightHeight) + 1;
-    size_t balance = leftHeight - rightHeight;
+    long long leftHeight = -1;
+    long long rightHeight = -1;
+
+    //traverse the tree and get balance
+    if (current->left)
+    {
+        leftHeight = current->left->height;
+        if (key < current->key ) balance(key, current->left);
+    }
+    if (current->right)
+    {
+        rightHeight = current->right->height;
+        if (key > current->key) balance(key, current->right);
+    }
+    current->height = current->getHeight();
+    // bar unneccisarry calculations
+    if (current->height < 2) return;
 
     //check if tree needs rebalancing
+    size_t balance = leftHeight - rightHeight;
     if (balance >= 2) // hook is to the left
     {
-        // check balance of hook node
+        // check balance of hook node reusing left and right height variables
+        leftHeight = -1;
+        rightHeight = -1;
+        if (current->left->left) leftHeight = current->left->left->height;
+        if (current->left->right) rightHeight = current->left->right->height;
+        balance = leftHeight - rightHeight;
+        if (balance < 0) //left-right
+        {
 
 
-        AVLNode* hold = current->left->right;
-        current->left->right = current;
-        current = current->left;
-        current->right->left = hold;
+        }
+        else //right-right
+        {
+            AVLNode* hold = current->left->right;
+            current->left->right = current;
+            current = current->left;
+            current->right->left = hold;
 
-        current->height = max(current->left->height,current->right->height) + 1;
-        current->height = max(hold->height,current->right->height + 1);
+            current->height = max(current->left->height,current->right->height) + 1;
+            current->height = max(hold->height,current->right->height + 1);
+        }
     }
     if (balance <= -2) // hook is to the right
     {
     }
-
-    if (current->isLeaf()) current->height = 0;
-    if (current->numChildren() == 1)
-    {
-        if (current->right) current->height = current->right->height + 1;
-        else current->height = current->left->height + 1;
-    }
-    if (current->numChildren() == 2)
-    {
-    }
-    return current->height;
 }

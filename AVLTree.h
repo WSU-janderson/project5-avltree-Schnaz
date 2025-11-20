@@ -79,7 +79,7 @@ private:
     bool removeNode(AVLNode*& current);
     // You will implement this, but it is needed for removeNode()
     void balanceNode(AVLNode* node); //this is where node height assignments should be done
-    size_t balance(const KeyType& key, AVLNode*& node);
+    void balance(const KeyType& key, AVLNode*& node);
 
 };
 

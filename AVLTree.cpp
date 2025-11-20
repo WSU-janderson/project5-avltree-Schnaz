@@ -1,5 +1,7 @@
 #include "AVLTree.h"
 
+#include <iostream>
+#include <ostream>
 #include <string>
 
 using KeyType = string;
@@ -62,6 +64,8 @@ AVLTree::AVLNode::AVLNode(const KeyType key, const size_t value) : left(nullptr)
     this->value = value;
 }
 
+AVLTree::AVLTree() : treeSize(0), root(nullptr) {}
+
 ///insert - bool down the tree to nullptr, add value and rebalance
 /*
 Insert a new key-value pair into the tree. After a sucessful insert, the tree is rebalanced if necessary.
@@ -71,7 +75,7 @@ attempted to be inserted, the method should return false.
 */
 bool AVLTree::insert(const KeyType& key, ValueType value)
 {
-    insert(key, value, root);
+    return insert(key, value, root);
 }
 
 bool AVLTree::insert(const KeyType& key, ValueType value, AVLNode*& current)
@@ -81,18 +85,19 @@ bool AVLTree::insert(const KeyType& key, ValueType value, AVLNode*& current)
         current = new AVLNode(key, value);
         treeSize++;
         current->height = 0;
+        balance(current->key, root);
         return true;
     }
     if (key < current->key)
     {
         bool resize = insert(key, value, current->left);
-        current->height = current->getHeight();
+        current->height = current->nodeHeight();
         return resize;
     }
     if (key > current->key)
     {
-        bool resize = insert(key, value, current->left);
-        current->height = current->getHeight();
+        bool resize = insert(key, value, current->right);
+        current->height = current->nodeHeight();
         return resize;
     }
     return false;
@@ -118,13 +123,13 @@ bool AVLTree::remove(const KeyType& key, AVLNode*& current)
     if (key < current->key)
     {
         bool resize = remove(key, current->left);
-        if (resize) current->height = current->getHeight();
+        if (resize) current->height = current->nodeHeight();
         return resize;
     }
     if (key > current->key)
     {
         bool resize = remove(key, current->left);
-        if (resize) current->height = current->getHeight();
+        if (resize) current->height = current->nodeHeight();
         return resize;
     }
     removeNode(current);
@@ -253,7 +258,7 @@ size_t AVLTree::getHeight() const
 {
     return root->height;
 }
-size_t AVLTree::AVLNode::getHeight() const
+size_t AVLTree::AVLNode::nodeHeight() const
 {
     if (isLeaf()) return 0;
     if (numChildren()==1)
@@ -261,6 +266,7 @@ size_t AVLTree::AVLNode::getHeight() const
         if (left) return left->height + 1;
         return right->height + 1;
     }
+    cout<<"sup"<<endl; //FIXME
     return max(left->height,right->height) + 1;
 }
 
@@ -282,6 +288,7 @@ AVLTree::AVLNode* AVLTree::copyNode(const AVLNode* current, AVLNode*& clone)
     clone->left = copyNode(current->left, clone->left);
     clone->right = copyNode(current->right, clone->right);
     clone->height = current->height;
+    return clone;
 }
 
 ///operator= overload - replace object with a deep copy of another
@@ -345,7 +352,32 @@ children {G: 71} and {Z: 90} indented a certain amount, and their children {C: 6
 This style of printout can be achieved by doing a right-child-first in-order traversal of the tree,
 with each call passing in the current depth + 1 to use as an indentation factor
 */
-//friend std::ostream& operator<<(ostream& os, const AVLTree & avlTree)
+ostream& operator<<(ostream& os, const AVLTree & avlTree)
+{
+    string output;
+    AVLTree::ostreamFeed(avlTree.root, output);
+    os << output << endl;
+    return os;
+}
+void AVLTree::ostreamFeed(AVLNode* current, string& output)
+{
+    if (current==nullptr)
+    {
+        output+="[]";
+        return;
+    }
+    output+="[";
+    output+=current->key;
+    output+=":";
+    output+=to_string(current->value);
+    output+=" (";
+    output+=to_string(current->height);
+    output+=") ";
+    ostreamFeed(current->left, output);
+    output+=", ";
+    ostreamFeed(current->right, output);
+    output+="]";
+}
 
 /// number of non-null children?
 size_t AVLTree::AVLNode::numChildren() const
@@ -408,7 +440,7 @@ bool AVLTree::removeNode(AVLNode*& current)
         current->key = newKey;
         current->value = newValue;
 
-        current->height = current->getHeight();
+        current->height = current->nodeHeight();
         balanceNode(current);
 
         return true; // we already deleted the one we needed to so return
@@ -432,6 +464,7 @@ void AVLTree::balanceNode(AVLNode* current)
 //needs to return
 void AVLTree::balance(const KeyType& key, AVLNode*& current)
 {
+    //cout<<current->height<<endl; //FIXME
     //get heights of nodes to determine balance
     long long leftHeight = -1;
     long long rightHeight = -1;
@@ -447,12 +480,13 @@ void AVLTree::balance(const KeyType& key, AVLNode*& current)
         rightHeight = current->right->height;
         if (key > current->key) balance(key, current->right);
     }
-    current->height = current->getHeight();
+    current->height = current->nodeHeight();
     // bar unneccisarry calculations
     if (current->height < 2) return;
 
     //check if tree needs rebalancing
-    size_t balance = leftHeight - rightHeight;
+    long long balance = leftHeight - rightHeight;
+    //cout<<to_string(balance)<<endl; //FIXME
     if (balance >= 2) // hook is to the left
     {
         // check balance of hook node reusing left and right height variables
@@ -463,21 +497,52 @@ void AVLTree::balance(const KeyType& key, AVLNode*& current)
         balance = leftHeight - rightHeight;
         if (balance < 0) //left-right
         {
-
+            rotateLeft(current->left);
+            rotateRight(current);
 
         }
-        else //right-right
+        else //left-left
         {
-            AVLNode* hold = current->left->right;
-            current->left->right = current;
-            current = current->left;
-            current->right->left = hold;
-
-            current->height = max(current->left->height,current->right->height) + 1;
-            current->height = max(hold->height,current->right->height + 1);
+            rotateRight(current);
         }
     }
     if (balance <= -2) // hook is to the right
     {
+        leftHeight = -1;
+        rightHeight = -1;
+        if (current->right->left) leftHeight = current->left->left->height;
+        if (current->right->right) rightHeight = current->left->right->height;
+        balance = leftHeight - rightHeight;
+        if (balance > 0) //right-left
+        {
+            rotateRight(current->right);
+            rotateLeft(current);
+        }
+        else //right-right
+        {
+            rotateLeft(current);
+        }
     }
+}
+void AVLTree::rotateRight(AVLNode*& current)
+{
+    cout<<"rotateRight"<<endl;
+    AVLNode* hold = current->left->right;
+    current->left->right = current;
+    current = current->left;
+    current->right->left = hold;
+
+    current->right->height = current->right->nodeHeight();
+    current->height = current->nodeHeight();
+}
+void AVLTree::rotateLeft(AVLNode*& current)
+{
+    cout<<"rotateLeft"<<endl;
+    AVLNode* hold = current->right->left;
+    current->right->left = current;
+    current = current->right;
+    current->left->right = hold;
+
+    current->left->height = current->left->nodeHeight();
+    current->height = current->nodeHeight();
 }

@@ -33,7 +33,7 @@ protected:
         // true or false
         bool isLeaf() const;
         // number of hops to deepest leaf node
-        size_t getHeight() const;
+        size_t nodeHeight() const;
 
 
     };
@@ -54,6 +54,7 @@ public:
     void operator=(const AVLTree& other);
     ~AVLTree();
     friend std::ostream& operator<<(ostream& os, const AVLTree & avlTree);
+    static void ostreamFeed(AVLNode* node, string& output);
 
 private:
     size_t treeSize;
@@ -80,6 +81,8 @@ private:
     // You will implement this, but it is needed for removeNode()
     void balanceNode(AVLNode* node); //this is where node height assignments should be done
     void balance(const KeyType& key, AVLNode*& node);
+    void rotateLeft(AVLNode*& node);
+    void rotateRight(AVLNode*& node);
 
 };
 

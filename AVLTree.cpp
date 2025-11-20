@@ -71,17 +71,30 @@ attempted to be inserted, the method should return false.
 */
 bool AVLTree::insert(const KeyType& key, ValueType value)
 {
-insert(key, value, root);
+    insert(key, value, root);
 }
+
 bool AVLTree::insert(const KeyType& key, ValueType value, AVLNode*& current)
 {
-    if (current==nullptr) //add node
+    if (current == nullptr) //add node
     {
         current = new AVLNode(key, value);
+        treeSize++;
+        current->height = 0;
         return true;
     }
-    if (key<current->key) insert(key, value, current->left);
-    if (key>current->key) insert(key, value, current->left);
+    if (key < current->key)
+    {
+        bool resize = insert(key, value, current->left);
+        current->height = current->getHeight();
+        return resize;
+    }
+    if (key > current->key)
+    {
+        bool resize = insert(key, value, current->left);
+        current->height = current->getHeight();
+        return resize;
+    }
     return false;
 }
 
@@ -94,26 +107,49 @@ was not in the tree, remove() returns false.
 */
 bool AVLTree::remove(const KeyType& key)
 {
-    return removeNode(getNode(key, root));
+    return remove(key, root);
 }
+bool AVLTree::remove(const KeyType& key, AVLNode*& current)
+{
+    if (current == nullptr)
+    {
+        return false;
+    }
+    if (key < current->key)
+    {
+        bool resize = remove(key, current->left);
+        if (resize) current->height = current->getHeight();
+        return resize;
+    }
+    if (key > current->key)
+    {
+        bool resize = remove(key, current->left);
+        if (resize) current->height = current->getHeight();
+        return resize;
+    }
+    removeNode(current);
+    return true;
+}
+
 AVLTree::AVLNode* AVLTree::getNode(const KeyType& key, AVLNode* current)
 {
-    if (current==nullptr) //add node
+    if (current == nullptr)
     {
         return nullptr;
     }
-    if (key<current->key) return getNode(key, current->left);
-    if (key>current->key) return getNode(key, current->left);
+    if (key < current->key) return getNode(key, current->left);
+    if (key > current->key) return getNode(key, current->left);
     return current;
 }
+
 const AVLTree::AVLNode* AVLTree::readNode(const KeyType& key, const AVLNode* current) const
 {
-    if (current==nullptr) //add node
+    if (current == nullptr) //add node
     {
         return nullptr;
     }
-    if (key<current->key) return readNode(key, current->left);
-    if (key>current->key) return readNode(key, current->left);
+    if (key < current->key) return readNode(key, current->left);
+    if (key > current->key) return readNode(key, current->left);
     return current;
 }
 
@@ -140,7 +176,7 @@ not found.
 optional<ValueType> AVLTree::get(const KeyType& key) const
 {
     const AVLNode* node = readNode(key, root);
-    if (node==nullptr) return nullopt;
+    if (node == nullptr) return nullopt;
     return node->value;
 }
 
@@ -164,15 +200,17 @@ associated with keys ≥ lowKey and keys ≤ highKey. For each key found in the 
 will be one value in the vector. If no matching key-value pairs are found, the function should return
 an empty vector.
 */
-vector<ValueType> AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey) const
+vector<ValueType> AVLTree::findRange(const KeyType& lowKey, const KeyType& highKey) const
 {
     vector<ValueType> valueVec;
     findRange(lowKey, highKey, root, valueVec);
     return valueVec;
 }
-void AVLTree::findRange( const KeyType& lowKey, const KeyType& highKey, const AVLNode* current, vector<ValueType>& valueVec) const
+
+void AVLTree::findRange(const KeyType& lowKey, const KeyType& highKey, const AVLNode* current,
+                        vector<ValueType>& valueVec) const
 {
-    if (current==nullptr) return;
+    if (current == nullptr) return;
     if (lowKey < current->key) findRange(lowKey, highKey, current->left, valueVec);
     if (lowKey <= current->key && current->key <= highKey) valueVec.push_back(current->value);
     if (highKey > current->key) findRange(lowKey, highKey, current->right, valueVec);
@@ -189,9 +227,10 @@ vector<KeyType> AVLTree::keys() const
     keys(root, keyVec);
     return keyVec;
 }
+
 void AVLTree::keys(AVLNode* current, vector<KeyType>& keyVec) const
 {
-    if (current==nullptr) return;
+    if (current == nullptr) return;
     keys(current->left, keyVec);
     keyVec.push_back(current->key);
     keys(current->right, keyVec);
@@ -214,6 +253,16 @@ size_t AVLTree::getHeight() const
 {
     return root->height;
 }
+size_t AVLTree::AVLNode::getHeight() const
+{
+    if (isLeaf()) return 0;
+    if (numChildren()==1)
+    {
+        if (left) return left->height + 1;
+        return right->height + 1;
+    }
+    return max(left->height,right->height) + 1;
+}
 
 ///copy constructor - perform a deep copy
 /*
@@ -221,15 +270,18 @@ perform a deep copy
 */
 AVLTree::AVLTree(const AVLTree& other)
 {
-
+    root = copyNode(other.root, root);
+    treeSize = other.treeSize;
 }
-void AVLTree::copyNode(const AVLNode* current, AVLNode*& clone)
-{
-    if (current==nullptr) return;
-    clone=new AVLNode(current->key, current->value);
 
-    copyNode(current->left, clone->left);
-    copyNode(current->right, clone->right);
+AVLTree::AVLNode* AVLTree::copyNode(const AVLNode* current, AVLNode*& clone)
+{
+    if (current == nullptr) return nullptr;
+    clone = new AVLNode(current->key, current->value);
+
+    clone->left = copyNode(current->left, clone->left);
+    clone->right = copyNode(current->right, clone->right);
+    clone->height = current->height;
 }
 
 ///operator= overload - replace object with a deep copy of another
@@ -242,7 +294,8 @@ into may already have had elements inserted, so that memory needs to be released
 void AVLTree::operator=(const AVLTree& other)
 {
     clearNode(root);
-    copyNode(other.root, root);
+    root = copyNode(other.root, root);
+    treeSize = other.treeSize;
 }
 
 ///deconstructor - deallocate allocated memory
@@ -260,13 +313,15 @@ AVLTree::~AVLTree()
 {
     clearNode(root);
 }
+
 void AVLTree::clearNode(AVLNode*& current)
 {
-    if (current==nullptr) return;
+    if (current == nullptr) return;
     clearNode(current->left);
     clearNode(current->right);
     delete current;
 }
+
 ///operator<< overload - print AVLTree to ostream
 /*
 In addition to these methods of AVLTree, you will also implement an operator to easily print out
@@ -293,82 +348,117 @@ with each call passing in the current depth + 1 to use as an indentation factor
 //friend std::ostream& operator<<(ostream& os, const AVLTree & avlTree)
 
 /// number of non-null children?
-size_t AVLTree::AVLNode::numChildren() const {
+size_t AVLTree::AVLNode::numChildren() const
+{
     size_t num = 0;
-    if (left!=nullptr) num++;
-    if (right!=nullptr) num++;
+    if (left != nullptr) num++;
+    if (right != nullptr) num++;
     return num;
 }
+
 /// true if no children
-bool AVLTree::AVLNode::isLeaf() const {
-    return numChildren()==0;
+bool AVLTree::AVLNode::isLeaf() const
+{
+    return numChildren() == 0;
 }
-/// returns auto-updating value stored as node height
-size_t AVLTree::AVLNode::getHeight() const {
-    return height; //note: still need to add auto updating height to rebalance
-}
+
 /// remove node and reorder tree as needed
-bool AVLTree::removeNode(AVLNode* current){
-    if (!current) {
+bool AVLTree::removeNode(AVLNode*& current)
+{
+    if (!current)
+    {
         return false;
     }
 
     AVLNode* toDelete = current;
     auto nChildren = current->numChildren();
-    if (current->isLeaf()) {
+    if (current->isLeaf())
+    {
         // case 1 we can delete the node
         current = nullptr;
-    } else if (current->numChildren() == 1) {
+    }
+    else if (current->numChildren() == 1)
+    {
         // case 2 - replace current with its only child
-        if (current->right) {
+        if (current->right)
+        {
             current = current->right;
-        } else {
+        }
+        else
+        {
             current = current->left;
         }
-    } else {
+    }
+    else
+    {
         // case 3 - we have two children,
         // get smallest key in right subtree by
         // getting right child and go left until left is null
         AVLNode* smallestInRight = current->right;
         // I could check if smallestInRight is null,
         // but it shouldn't be since the node has two children
-        while (smallestInRight->left) {
+        while (smallestInRight->left)
+        {
             smallestInRight = smallestInRight->left;
         }
         std::string newKey = smallestInRight->key;
-        int newValue = smallestInRight->value;
-        remove(root, smallestInRight->key); // delete this one write helper function FIXME
+        size_t newValue = smallestInRight->value;
+        remove(smallestInRight->key, root); //FIXME this is a different kind of removal
 
         current->key = newKey;
         current->value = newValue;
 
-        current->height = current->getHeight(); //FIXME
+        current->height = current->getHeight();
         balanceNode(current);
 
         return true; // we already deleted the one we needed to so return
     }
     delete toDelete;
+    treeSize--;
 
     return true;
 }
+
 ///// bool down tree and run removeNode when node is found
 //bool AVLTree::remove(AVLNode *&current, KeyType key) {
 //    return false;
 //}
 /// checks every parent node if needs rebalancing and rebalances;
-void AVLTree::balanceNode(AVLNode *current)
+void AVLTree::balanceNode(AVLNode* current)
 {
-balance(current->key, root);
+    balance(current->key, root);
 }
-size_t AVLTree::balance(const KeyType& key, AVLNode *&current) {
+
+//needs to return
+size_t AVLTree::balance(const KeyType& key, AVLNode*& current)
+{
+    //get heights of nodes to determine balance
     size_t leftHeight = 0;
     size_t rightHeight = 0;
-    if (key<current->key && current) leftHeight = balance(key, current->left);
-    if (key>current->key) rightHeight = balance(key, current->left);
+    if (key < current->key && current->left) leftHeight = balance(key, current->left);
+    if (key > current->key && current->right) rightHeight = balance(key, current->left);
+    current->height = max(leftHeight, rightHeight) + 1;
+    size_t balance = leftHeight - rightHeight;
+
+    //check if tree needs rebalancing
+    if (balance >= 2) // hook is to the left
+    {
+        // check balance of hook node
 
 
+        AVLNode* hold = current->left->right;
+        current->left->right = current;
+        current = current->left;
+        current->right->left = hold;
 
-    if (current->isLeaf()) current->height=0;
+        current->height = max(current->left->height,current->right->height) + 1;
+        current->height = max(hold->height,current->right->height + 1);
+    }
+    if (balance <= -2) // hook is to the right
+    {
+    }
+
+    if (current->isLeaf()) current->height = 0;
     if (current->numChildren() == 1)
     {
         if (current->right) current->height = current->right->height + 1;
@@ -376,7 +466,6 @@ size_t AVLTree::balance(const KeyType& key, AVLNode *&current) {
     }
     if (current->numChildren() == 2)
     {
-
     }
     return current->height;
 }

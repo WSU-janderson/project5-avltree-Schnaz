@@ -131,7 +131,7 @@ AVLTree::AVLNode* AVLTree::getNode(const KeyType& key, AVLNode* current)
         return nullptr;
     }
     if (key < current->key) return getNode(key, current->left);
-    if (key > current->key) return getNode(key, current->left);
+    if (key > current->key) return getNode(key, current->right);
     return current;
 }
 
@@ -149,7 +149,7 @@ const AVLTree::AVLNode* AVLTree::readNode(const KeyType& key, const AVLNode* cur
         return nullptr;
     }
     if (key < current->key) return readNode(key, current->left);
-    if (key > current->key) return readNode(key, current->left);
+    if (key > current->key) return readNode(key, current->right);
     return current;
 }
 
